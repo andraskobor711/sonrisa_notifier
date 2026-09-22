@@ -6,10 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sonrisa.Notifier.Core\Sonrisa.Notifier.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Ensure data files are treated as content/none so build doesn't try to parse SQL files -->
     <None Include="Data\**\*" />
   </ItemGroup>

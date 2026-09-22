@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Sonrisa.Notifier.Core.Models;
 
 namespace Sonrisa.Notifier.Core.Interfaces

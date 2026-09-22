@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Sonrisa.Notifier.Infrastructure;
 using Microsoft.Data.Sqlite;
-using System.IO;
-using System;
+using Sonrisa.Notifier.Core.Senders;
+using Sonrisa.Notifier.Core.Interfaces;
+using Sonrisa.Notifier.Core.Dispatchers;
+using Sonrisa.Notifier.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,9 +46,15 @@ builder.Services.AddDbContext<SonrisaNotifierDbContext>(options =>
 );
 
 // Infrastructure repositories
-builder.Services.AddScoped<Sonrisa.Notifier.Infrastructure.Repositories.IUserRepository, Sonrisa.Notifier.Infrastructure.Repositories.UserRepository>();
-builder.Services.AddScoped<Sonrisa.Notifier.Infrastructure.Repositories.IChannelRepository, Sonrisa.Notifier.Infrastructure.Repositories.ChannelRepository>();
-builder.Services.AddScoped<Sonrisa.Notifier.Infrastructure.Repositories.IUsersChannelsRepository, Sonrisa.Notifier.Infrastructure.Repositories.UsersChannelsRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IChannelRepository, ChannelRepository>();
+builder.Services.AddScoped<IUsersChannelsRepository, UsersChannelsRepository>();
+
+// Notification senders and dispatcher (moved to Core)
+builder.Services.AddScoped<EmailNotificationSender>();
+builder.Services.AddScoped<SlackNotificationSender>();
+builder.Services.AddScoped<INotificationSenderFactory, NotificationSenderFactory>();
+builder.Services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
 
 builder.Services.AddControllers();
 

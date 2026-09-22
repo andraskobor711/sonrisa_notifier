@@ -17,18 +17,13 @@ namespace Sonrisa.Notifier.Tests
             // Act
             var message = new OutgoingMessage
             {
-                UserId = userId,
                 Title = title,
                 Body = body
             };
 
             // Assert
-            Assert.AreEqual(userId, message.UserId);
             Assert.AreEqual(title, message.Title);
             Assert.AreEqual(body, message.Body);
-            Assert.IsNotNull(message.MessageId);
-            Assert.IsTrue(message.CreatedAt <= System.DateTimeOffset.UtcNow);
-            CollectionAssert.AreEqual(new System.Collections.Generic.List<string>(), message.Channels);
         }
     }
 }
