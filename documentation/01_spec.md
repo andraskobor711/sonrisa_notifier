@@ -23,12 +23,13 @@ Overview
 
 Project structure (recommended)
 - src/
-  - Sonrisa.Notifier.Api (ASP.NET Core Web API - backend only: controllers, DTOs, services, DbContext)
+  - Sonrisa.Notifier.Host (ASP.NET Core Web Host - startup project containing Program.cs and appsettings.json)
+  - Sonrisa.Notifier.Api (class library containing API controllers, DTOs and viewmodels - no Program.cs; the Host project is the startup)
   - Sonrisa.Notifier.Admin (Razor MVC / Razor Pages project - frontend/Admin UI: views, viewmodels, static assets)
   - Sonrisa.Notifier.Core (domain models, interfaces, shared DTOs)
   - Sonrisa.Notifier.Infrastructure (EF Core DbContext, repositories, concrete senders)
   - Sonrisa.Notifier.Worker (optional background worker for retries or queued sending)
-  - Sonrisa.Notifier.Tests (unit & integration tests)
+  - Sonrisa.Notifier.Tests (unit & integration tests - MSTest in the current skeleton)
 
 Persistence (EF Core) models & DbContext
 - Use Microsoft.EntityFrameworkCore.Sqlite
@@ -164,11 +165,14 @@ Admin UI (separate project) integration points
   - Recommended (decoupled): Admin calls Api endpoints (HttpClient) and renders results. This makes the UI and backend independently deployable and keeps the Api project focused on backend concerns.
 
 What belongs in each project
+- Sonrisa.Notifier.Host
+  - ASP.NET Core Web Host (Program.cs) and configuration files (appsettings.json)
+  - DI registration and application startup (register DbContext, services, senders, logging, etc.)
+
 - Sonrisa.Notifier.Api
   - API controllers (UsersController, ChannelsController, UsersChannelsController, TestEventsController)
   - DTOs used by the API
-  - Services, DbContext, repositories, concrete senders
-  - DI registration and app configuration
+  - No Program.cs in this project: controllers and API surface are implemented here and wired up by the Host project
 
 - Sonrisa.Notifier.Admin
   - Razor views/pages, view models specific to UI, client-side assets (css/js)
@@ -209,8 +213,8 @@ Testing plan
 
 Migration and local run
 - Add EF Core migrations:
-  - dotnet ef migrations add Init -p src/Sonrisa.Notifier.Infrastructure -s src/Sonrisa.Notifier.Api
-  - dotnet ef database update -p src/Sonrisa.Notifier.Infrastructure -s src/Sonrisa.Notifier.Api
+  - dotnet ef migrations add Init -p src/Sonrisa.Notifier.Infrastructure -s src/Sonrisa.Notifier.Host
+  - dotnet ef database update -p src/Sonrisa.Notifier.Infrastructure -s src/Sonrisa.Notifier.Host
 - Or use DbContext.Database.EnsureCreated() for simple local setup in development.
 
 Sample implementation notes & code skeleton (files to create)
@@ -224,7 +228,7 @@ Sample implementation notes & code skeleton (files to create)
 - src/Sonrisa.Notifier.Api/Controllers/UsersController.cs
 - src/Sonrisa.Notifier.Api/Controllers/ChannelsController.cs
 - src/Sonrisa.Notifier.Api/Controllers/UsersChannelsController.cs
-- src/Sonrisa.Notifier.Api/Startup or Program.cs DI registration:
+- src/Sonrisa.Notifier.Host/Program.cs DI registration:
   - services.AddDbContext<SonrisaNotifierDbContext>(opts => opts.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
   - services.AddScoped<ISubscriptionService, SubscriptionService>();
   - services.AddScoped<IEventHandlerService, EventHandlerService>();
@@ -247,10 +251,10 @@ Implementation plan — step-by-step
 The implementation will be split into focused steps. Each step includes unit tests and a short validation checklist.
 
 Step 1 — Project skeleton (backend only)
-- Goal: create solution and projects: Sonrisa.Notifier.Api, Sonrisa.Notifier.Core, Sonrisa.Notifier.Infrastructure, Sonrisa.Notifier.Tests. Configure shared project references and CI-friendly layout.
+- Goal: create solution and projects: Sonrisa.Notifier.Host, Sonrisa.Notifier.Api, Sonrisa.Notifier.Core, Sonrisa.Notifier.Infrastructure, Sonrisa.Notifier.Tests. Configure shared project references and CI-friendly layout.
 - Deliverables:
-  - Solution file, project folders, basic Program.cs/Startup wiring in Api, Core project with DTOs and interfaces, Infrastructure project with empty DbContext placeholder.
-  - Test project scaffold with xUnit or NUnit and a sample test that asserts the DI container resolves a dummy service.
+  - Solution file, project folders, basic Program.cs/Startup wiring in the Host project, Core project with DTOs and interfaces, Infrastructure project with DbContext placeholder.
+  - Test project scaffold using MSTest and a sample unit test (Arrange-Act-Assert) for a simple domain type (e.g., OutgoingMessage).
 - Validation: solution builds, tests run and pass (sample test), project references are correct.
 
 Step 2 — DAL (EF Core) implementation
