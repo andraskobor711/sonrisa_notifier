@@ -62,6 +62,12 @@ Persistence (EF Core) models & DbContext
 	- DbSets: Users, Channels, UsersChannels
   - Configure composite key on UsersChannels
 
+  - Runtime DB file location & seeding
+	- For developer convenience the SQLite file may live inside the Infrastructure project (recommended path: src/Sonrisa.Notifier.Infrastructure/Data/sonrisa_notifier.db).
+	- Keep a human-readable seed SQL (e.g., seed.sql or seed.sql.txt) in the same folder as the source of truth. The Host can execute this seed file on first run to create the .db file automatically.
+	- Prefer committing the seed SQL. Optionally commit the generated binary .db for quick start, but document how to regenerate it from the seed SQL to avoid drift.
+	- Mark Data files as content/none in the Infrastructure project so IDE/build tooling does not attempt to parse SQL during compilation.
+
 Domain objects and DTOs
 - Domain objects (Core project)
   - OutgoingMessage
@@ -260,9 +266,10 @@ Step 1 — Project skeleton (backend only)
 Step 2 — DAL (EF Core) implementation
 - Goal: implement entities (User, Channel, UsersChannels) and SonrisaNotifierDbContext with migrations or EnsureCreated support using SQLite.
 - Deliverables:
-  - Entity classes and DbContext in Infrastructure
-  - Repository interfaces or use DbContext directly from services
-  - Unit tests using in-memory or SQLite in-memory provider validating CRUD operations via DbContext
+-  - Entity classes and DbContext in Infrastructure
+-  - Repository interfaces (IUserRepository, IChannelRepository, IUsersChannelsRepository) and simple implementations to encapsulate common data operations; repositories should be registered in DI.
+-  - Seed SQL that can be executed to create a baseline developer DB and optional runtime behavior in Host to create the DB file from the seed on first run
+-  - Unit tests using in-memory or SQLite in-memory provider validating CRUD operations via DbContext and repository behavior
 - Validation: migrations can be created or EnsureCreated succeeds; unit tests cover create/read/update/delete for Users and Channels and UsersChannels mapping.
 
 Step 3 — API endpoints and data maintenance logic
