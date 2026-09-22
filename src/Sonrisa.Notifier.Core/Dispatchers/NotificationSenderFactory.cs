@@ -15,7 +15,6 @@ namespace Sonrisa.Notifier.Core.Dispatchers
 
         public INotificationSender? GetSender(string channelType)
         {
-            if (channelType == null) return null;
             var type = channelType.ToLowerInvariant();
             return type switch
             {

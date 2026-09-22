@@ -1,3 +1,5 @@
+using Sonrisa.Notifier.Infrastructure.Entities;
+
 namespace Sonrisa.Notifier.Core.Interfaces
 {
     public interface INotificationSenderFactory

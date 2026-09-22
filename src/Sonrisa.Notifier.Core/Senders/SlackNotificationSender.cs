@@ -1,9 +1,7 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Sonrisa.Notifier.Core.Interfaces;
 using Sonrisa.Notifier.Core.Models;
+using Sonrisa.Notifier.Infrastructure;
 using Sonrisa.Notifier.Infrastructure.Entities;
 
 namespace Sonrisa.Notifier.Core.Senders
@@ -14,10 +12,13 @@ namespace Sonrisa.Notifier.Core.Senders
 
         private readonly string _channelConfigJson;
 
-        public SlackNotificationSender(ILogger<SlackNotificationSender> logger, Sonrisa.Notifier.Infrastructure.Entities.Channel channel)
+        public SlackNotificationSender(ILogger<SlackNotificationSender> logger, SonrisaNotifierDbContext dbContext)
         {
             _logger = logger;
-            _channelConfigJson = channel?.ConfigJson ?? string.Empty;
+            _channelConfigJson = dbContext.Channels
+                .Where(c => c.Type.ToLower() == "slack")
+                .Select(c => c.ConfigJson)
+                .FirstOrDefault() ?? string.Empty;
         }
 
         public Task<DeliveryResult> SendAsync(OutgoingMessage message, User user, CancellationToken ct = default)
