@@ -13,10 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Sonrisa.Notifier.Core\Sonrisa.Notifier.Core.csproj" />
+    <ProjectReference Include="..\src\Sonrisa.Notifier.Core\Sonrisa.Notifier.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Sonrisa.Notifier.Infrastructure\Sonrisa.Notifier.Infrastructure.csproj" />
+    <ProjectReference Include="..\src\Sonrisa.Notifier.Infrastructure\Sonrisa.Notifier.Infrastructure.csproj" />
+    <ProjectReference Include="..\src\Sonrisa.Notifier.Api\Sonrisa.Notifier.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />

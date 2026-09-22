@@ -9,4 +9,8 @@
     <ProjectReference Include="..\Sonrisa.Notifier.Core\Sonrisa.Notifier.Core.csproj" />
     <ProjectReference Include="..\Sonrisa.Notifier.Infrastructure\Sonrisa.Notifier.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Reference the shared ASP.NET Core framework so controller attributes and types are available -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
 </Project>

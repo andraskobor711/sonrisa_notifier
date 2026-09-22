@@ -7,6 +7,7 @@ namespace Sonrisa.Notifier.Infrastructure.Repositories
 {
     public interface IUsersChannelsRepository
     {
+        Task<List<UsersChannels>> GetAllAsync();
         Task AddAsync(UsersChannels usersChannel);
         Task RemoveAsync(Guid userId, Guid channelId);
         Task<List<Guid>> GetChannelIdsForUserAsync(Guid userId);

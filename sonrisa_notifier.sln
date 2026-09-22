@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonrisa.Notifier.Worker", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonrisa.Notifier.Host", "src\Sonrisa.Notifier.Host\Sonrisa.Notifier.Host.csproj", "{66666666-6666-6666-6666-666666666666}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonrisa.Notifier.Tests", "tests\Sonrisa.Notifier.Tests\Sonrisa.Notifier.Tests.csproj", "{77777777-7777-7777-7777-777777777777}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sonrisa.Notifier.Tests", "tests\Sonrisa.Notifier.Tests.csproj", "{77777777-7777-7777-7777-777777777777}"
 EndProject
 
 Global

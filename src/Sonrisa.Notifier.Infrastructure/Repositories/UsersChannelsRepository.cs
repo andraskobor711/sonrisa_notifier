@@ -22,6 +22,11 @@ namespace Sonrisa.Notifier.Infrastructure.Repositories
             await _db.SaveChangesAsync();
         }
 
+        public async Task<List<UsersChannels>> GetAllAsync()
+        {
+            return await _db.UsersChannels.ToListAsync();
+        }
+
         public async Task RemoveAsync(Guid userId, Guid channelId)
         {
             var uc = await _db.UsersChannels.FindAsync(userId, channelId);
