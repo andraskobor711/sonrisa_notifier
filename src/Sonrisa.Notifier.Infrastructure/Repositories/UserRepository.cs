@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sonrisa.Notifier.Infrastructure.Entities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sonrisa.Notifier.Infrastructure.Repositories
@@ -26,6 +27,10 @@ namespace Sonrisa.Notifier.Infrastructure.Repositories
             var user = await _db.Users.FindAsync(id);
             if (user != null)
             {
+                // Remove related UsersChannels entries to avoid FK constraint issues
+                var links = _db.UsersChannels.Where(uc => uc.UserId == id);
+                _db.UsersChannels.RemoveRange(links);
+
                 _db.Users.Remove(user);
                 await _db.SaveChangesAsync();
             }

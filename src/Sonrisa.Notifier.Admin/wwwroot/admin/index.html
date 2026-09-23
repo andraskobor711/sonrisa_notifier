@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Sonrisa Notifier - Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; }
+        textarea { width: 100%; height: 80px; }
+        input[type=text] { width: 100%; }
+        .users { margin-top: 10px; }
+        .user { padding: 6px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sonrisa Notifier — Admin (thin)</h1>
+
+        <section>
+            <h2>Users</h2>
+            <button id="refreshUsers">Refresh users</button>
+            <div id="users" class="users"></div>
+
+            <div style="margin-top:10px;padding:10px;border:1px solid #ddd;">
+                <h3>Create user</h3>
+                <label>Email</label>
+                <input id="newEmail" type="text" placeholder="user@example.com" />
+                <label>Display name</label>
+                <input id="newDisplayName" type="text" placeholder="Optional display name" />
+                <div style="margin-top:8px">
+                    <button id="createUser">Create user</button>
+                </div>
+                <div id="createResult" style="margin-top:6px;color:green"></div>
+            </div>
+        </section>
+
+        <section style="margin-top:20px">
+            <h2>Subscriptions</h2>
+            <div id="subscriptions"></div>
+            <div id="subscriptionsResult" style="margin-top:8px;color:green"></div>
+        </section>
+
+        <section style="margin-top:20px">
+            <h2>Send Test Message</h2>
+            <label>Title</label>
+            <input id="title" type="text" placeholder="Test title" />
+            <label>Body</label>
+            <textarea id="body" placeholder="Test body"></textarea>
+            <div style="margin-top:10px">
+                <button id="sendToAll">Send to all subscribers</button>
+            </div>
+            <div id="result" style="margin-top:10px;color:green"></div>
+        </section>
+    </div>
+
+    <script>
+        let users = [];
+        let channels = [];
+        let mappings = [];
+        async function loadUsers() {
+            const res = await fetch('/api/users');
+            if (!res.ok) {
+                document.getElementById('users').innerText = 'Failed to load users';
+                return;
+            }
+            users = await res.json();
+            const container = document.getElementById('users');
+            container.innerHTML = '';
+            users.forEach(u => {
+                const el = document.createElement('div');
+                el.className = 'user';
+                el.innerHTML = `<strong>${u.displayName || u.email}</strong> <small>${u.email}</small> <button data-id="${u.id}" class="deleteBtn" style="margin-left:8px">Delete</button>`;
+                container.appendChild(el);
+            });
+
+            // attach delete handlers
+            document.querySelectorAll('.deleteBtn').forEach(b => {
+                b.addEventListener('click', async (ev) => {
+                    const id = b.getAttribute('data-id');
+                    if (!confirm('Delete user?')) return;
+                    const res = await fetch('/api/users/' + id, { method: 'DELETE' });
+                    if (res.ok) {
+                        document.getElementById('result').innerText = 'User deleted';
+                        document.getElementById('result').style.color = 'green';
+                        await loadUsers();
+                        await loadSubscriptions();
+                    } else {
+                        const txt = await res.text();
+                        document.getElementById('result').innerText = 'Delete error: ' + txt;
+                        document.getElementById('result').style.color = 'red';
+                    }
+                });
+            });
+
+            // refresh subscriptions UI because user list changed
+            await loadSubscriptions();
+        }
+
+        document.getElementById('refreshUsers').addEventListener('click', loadUsers);
+        window.addEventListener('load', loadUsers);
+
+        document.getElementById('createUser').addEventListener('click', async () => {
+            const email = document.getElementById('newEmail').value;
+            const displayName = document.getElementById('newDisplayName').value;
+            if (!email) { document.getElementById('createResult').innerText = 'Email is required'; return; }
+            const payload = { email: email, displayName: displayName, isActive: true };
+            const res = await fetch('/api/users', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (res.status === 201) {
+                document.getElementById('createResult').innerText = 'User created';
+                document.getElementById('createResult').style.color = 'green';
+                document.getElementById('newEmail').value = '';
+                document.getElementById('newDisplayName').value = '';
+                await loadUsers();
+                await loadSubscriptions();
+            } else {
+                const txt = await res.text();
+                document.getElementById('createResult').innerText = 'Create error: ' + txt;
+                document.getElementById('createResult').style.color = 'red';
+            }
+        });
+
+        async function loadSubscriptions() {
+            const subContainer = document.getElementById('subscriptions');
+            subContainer.innerHTML = '';
+
+            // load channels and mappings
+            const chRes = await fetch('/api/channels');
+            if (!chRes.ok) { subContainer.innerText = 'Failed to load channels'; return; }
+            channels = await chRes.json();
+
+            const mapRes = await fetch('/api/userschannels');
+            if (!mapRes.ok) { subContainer.innerText = 'Failed to load subscriptions'; return; }
+            mappings = await mapRes.json();
+
+            // render per-channel subscription matrix (simple)
+            channels.forEach(ch => {
+                const chWrap = document.createElement('div');
+                chWrap.style.border = '1px solid #ddd';
+                chWrap.style.padding = '8px';
+                chWrap.style.marginBottom = '8px';
+                const title = document.createElement('div');
+                title.innerHTML = `<strong>${ch.type}</strong> <small>${ch.id}</small>`;
+                chWrap.appendChild(title);
+
+                const list = document.createElement('div');
+                users.forEach(u => {
+                    const subscribed = mappings.some(m => m.userId === u.id && m.channelId === ch.id);
+                    const row = document.createElement('div');
+                    row.innerHTML = `<label><input type="checkbox" data-userid="${u.id}" data-channelid="${ch.id}" ${subscribed ? 'checked' : ''} /> ${u.displayName || u.email}</label>`;
+                    list.appendChild(row);
+                });
+                chWrap.appendChild(list);
+                subContainer.appendChild(chWrap);
+            });
+
+            // attach change handlers
+            document.querySelectorAll('#subscriptions input[type=checkbox]').forEach(cb => {
+                cb.addEventListener('change', async (ev) => {
+                    const userId = cb.getAttribute('data-userid');
+                    const channelId = cb.getAttribute('data-channelid');
+                    if (!userId || !channelId) return;
+
+                    if (cb.checked) {
+                        // subscribe
+                        const payload = { userId: userId, channelId: channelId };
+                        const r = await fetch('/api/userschannels', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (r.status === 201) {
+                            document.getElementById('subscriptionsResult').innerText = 'Subscribed';
+                            document.getElementById('subscriptionsResult').style.color = 'green';
+                        } else {
+                            const txt = await r.text();
+                            document.getElementById('subscriptionsResult').innerText = 'Subscribe error: ' + txt;
+                            document.getElementById('subscriptionsResult').style.color = 'red';
+                            cb.checked = false;
+                        }
+                    } else {
+                        // unsubscribe
+                        const r = await fetch(`/api/userschannels/${userId}/${channelId}`, { method: 'DELETE' });
+                        if (r.ok) {
+                            document.getElementById('subscriptionsResult').innerText = 'Unsubscribed';
+                            document.getElementById('subscriptionsResult').style.color = 'green';
+                        } else {
+                            const txt = await r.text();
+                            document.getElementById('subscriptionsResult').innerText = 'Unsubscribe error: ' + txt;
+                            document.getElementById('subscriptionsResult').style.color = 'red';
+                            cb.checked = true;
+                        }
+                    }
+                });
+            });
+        }
+
+        async function sendMessage() {
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+            const msg = {
+                messageId: crypto.randomUUID(),
+                title: title,
+                body: body,
+                // priority removed
+                createdAt: new Date().toISOString()
+            };
+
+            const res = await fetch('/api/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(msg)
+            });
+            if (res.status === 202) {
+                document.getElementById('result').innerText = 'Dispatched (accepted)';
+            } else {
+                const txt = await res.text();
+                document.getElementById('result').innerText = 'Error: ' + txt;
+                document.getElementById('result').style.color = 'red';
+            }
+        }
+
+        document.getElementById('sendToAll').addEventListener('click', () => sendMessage());
+
+</script>
+</body>
+</html>

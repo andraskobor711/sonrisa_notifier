@@ -5,6 +5,8 @@ using Sonrisa.Notifier.Core.Senders;
 using Sonrisa.Notifier.Core.Interfaces;
 using Sonrisa.Notifier.Core.Dispatchers;
 using Sonrisa.Notifier.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,10 +59,26 @@ builder.Services.AddScoped<INotificationSenderFactory, NotificationSenderFactory
 builder.Services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
 
 builder.Services.AddControllers();
+// Enable serving static files for a lightweight Admin UI
+builder.Services.AddDirectoryBrowser();
 
 var app = builder.Build();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapGet("/", () => "Sonrisa Notifier Host");
+
+// Serve a minimal Admin UI at /admin
+app.MapGet("/admin", () =>
+{
+    // Serve admin UI from the Admin project wwwroot so UI assets live in the Admin project
+    var file = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "Sonrisa.Notifier.Admin", "wwwroot", "admin", "index.html"));
+    if (!File.Exists(file)) return Results.NotFound();
+    var content = File.ReadAllText(file);
+    return Results.Content(content, "text/html");
+});
+
 app.MapControllers();
 
 app.Run();

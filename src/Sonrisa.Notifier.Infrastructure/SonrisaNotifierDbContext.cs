@@ -20,6 +20,20 @@ namespace Sonrisa.Notifier.Infrastructure
             modelBuilder.Entity<UsersChannels>()
                 .HasKey(uc => new { uc.UserId, uc.ChannelId });
 
+            // Configure relationships with cascade delete so removing a User or Channel
+            // will remove corresponding UsersChannels entries and avoid FK constraint failures.
+            modelBuilder.Entity<UsersChannels>()
+                .HasOne<User>()
+                .WithMany()
+                .HasForeignKey(uc => uc.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UsersChannels>()
+                .HasOne<Channel>()
+                .WithMany()
+                .HasForeignKey(uc => uc.ChannelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Configure simple mappings; further configuration can be added later
             modelBuilder.Entity<User>()
                 .Property(u => u.Email)
