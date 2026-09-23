@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  host:
+    build: .
+    image: sonrisa_notifier_host:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - data:/Sonrisa.Notifier.Infrastructure/Data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+
+volumes:
+  data:
+    driver: local

@@ -1,0 +1,12 @@
+bin/
+obj/
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+*.log
+.vscode/
+**/*.db
+**/*.db-journal
+**/sonrisa_notifier.db
